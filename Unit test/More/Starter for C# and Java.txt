@@ -1,0 +1,148 @@
+// Library Classes C# - Java: change the type bool to boolean
+//                               and the line using Assert.Throws
+
+public class Book
+{
+    private String title;
+    private String isbn;
+    private bool _isAvailable;
+    public bool isAvailable() {
+        return _isAvailable;
+    }
+
+    public Book(String title, String isbn)
+    {
+        this.title = title;
+        this.isbn = isbn;
+        this._isAvailable = true;
+    }
+
+    public String getTitle() { return title; }
+    public String getIsbn() { return isbn; }
+    public void borrowBook() { this._isAvailable = false; }
+    public void returnBook() { this._isAvailable = true; }
+}
+
+public class User
+{
+    private String name;
+    private int userId;
+
+    public User(String name, int userId)
+    {
+        this.name = name;
+        this.userId = userId;
+    }
+
+    public String getName() { return name; }
+    public int getUserId() { return userId; }
+}
+
+
+public interface ILibraryDatabase
+{
+    Book FindBookByIsbn(String isbn);
+}
+
+
+public class LibraryService
+{
+    private readonly ILibraryDatabase database;
+
+    public LibraryService(ILibraryDatabase database)
+    {
+        this.database = database;
+    }
+
+    public bool BorrowBook(String isbn, User user)
+    {
+        Book book = database.FindBookByIsbn(isbn);
+
+        if (book == null)
+            throw new ArgumentException("Book not found.");
+
+        if (!book.isAvailable())
+            throw new InvalidOperationException(
+                "Book is already on loan.");
+
+        book.borrowBook();
+        return true;
+    }
+
+    public bool ReturnBook(String isbn, User user)
+    {
+        Book book = database.FindBookByIsbn(isbn);
+
+        if (book == null)
+            throw new ArgumentException("Book not found.");
+
+        if (book.isAvailable())
+            throw new InvalidOperationException(
+                "Book is not currently on loan.");
+
+        book.returnBook();
+        return true;
+    }
+}
+
+
+// -------------- starter test methods ------------
+
+public void ReturnBook_WhenBookNotOnLoan_ThrowsException()
+public void BorrowBook_WhenAlreadyBorrowed_ThrowsException()
+
+
+[TestClass]
+public class LibraryServiceTests
+{
+    [TestMethod]
+    public void ReturnBook_WhenBookNotOnLoan_ThrowsException()
+    {
+        // Arrange
+        var database = new LibraryDatabaseStub();
+        var service = new LibraryService(database);
+
+        var book = new Book("C# Fundamentals", "12345");
+        database.AddBook(book);
+
+        var user = new User("Bob", 1);
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => service.ReturnBook("12345", user));
+
+        Assert.AreEqual("Book is not currently on loan.", ex.Message);
+    }
+
+    [TestMethod]
+    public void BorrowBook_WhenAlreadyBorrowed_ThrowsException()
+    {
+        var database = new LibraryDatabaseStub();
+        var service = new LibraryService(database);
+
+        var book = new Book("C# Fundamentals", "12345");
+        book.borrowBook();    // Already borrowed
+        database.AddBook(book);
+
+        var user = new User("Bob", 1);
+
+        Assert.Throws<InvalidOperationException>(
+            () => service.BorrowBook("12345", user));
+    }
+
+}
+
+
+//--------------------------------------------------------------
+Test data
+Book Title		Author			ISBN-13
+The Great Gatsby	F. Scott Fitzgerald	9780743273565
+To Kill a Mockingbird	Harper Lee		9780061120084
+1984			George Orwell		9780451524935
+Pride and Prejudice	Jane Austen		9780141439518
+The Catcher in the Rye	J.D. Salinger		9780316769488
+The Hobbit		J.R.R. Tolkien		9780547928227
+Brave New World		Aldous Huxley		9780060850524
+The Lord of the Rings	J.R.R. Tolkien		9780618640157
+Fahrenheit 451		Ray Bradbury		9781451673319
+Moby-Dick		Herman Melville		9781503280786
